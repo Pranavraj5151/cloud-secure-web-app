@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% set now = namespace(dt=none) %}
+
+<div class="row">
+    <div class="col-12">
+
+        <div class="alert alert-primary d-flex align-items-center mb-4">
+            <span class="fs-5 me-2">👤</span>
+            <div>
+                Welcome back, <strong>{{ current_user.username }}</strong>!
+                You are logged in as <span class="badge bg-primary">User</span>
+            </div>
+        </div>
+
+        <div class="card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>📋 My Tasks</h3>
+                <a href="{{ url_for('main.add_task') }}" class="btn btn-primary">+ Add Task</a>
+            </div>
+            {% if tasks %}
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Deadline</th>
+                            <th>Time Remaining</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks %}
+                        {% set is_overdue = task.deadline and task.deadline < now_dt and task.status != 'completed' %}
+                        <tr class="{{ 'table-danger' if is_overdue else '' }}">
+                            <td><strong>{{ task.title }}</strong></td>
+                            <td>{{ task.description or '—' }}</td>
+                            <td>
+                                {% if task.priority == 'high' %}
+                                    <span class="badge bg-danger">🔴 High</span>
+                                {% elif task.priority == 'medium' %}
+                                    <span class="badge bg-warning">🟡 Medium</span>
+                                {% else %}
+                                    <span class="badge bg-success">🟢 Low</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if task.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% elif task.status == 'in_progress' %}
+                                    <span class="badge bg-warning">In Progress</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if task.deadline %}
+                                    {{ task.deadline.strftime('%Y-%m-%d %I:%M %p') }}
+                                    {% if is_overdue %}
+                                        <br><span class="badge bg-danger">⚠️ Overdue</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">No deadline</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not task.deadline %}
+                                    <span class="text-muted">No deadline</span>
+                                {% elif is_overdue %}
+                                    <span class="badge bg-danger">Overdue</span>
+                                {% elif task.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% else %}
+                                    {% set diff = task.deadline - now_dt %}
+                                    {% set days = diff.days %}
+                                    {% set hours = (diff.seconds // 3600) %}
+                                    <span class="text-success fw-semibold">
+                                        {% if days > 0 %}
+                                            {{ days }}d {{ hours }}h
+                                        {% else %}
+                                            {{ hours }}h remaining
+                                        {% endif %}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ task.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <a href="{{ url_for('main.edit_task', task_id=task.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                                <a href="{{ url_for('main.delete_task', task_id=task.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this task?')">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="text-center py-5">
+                    <h5 class="text-muted">No tasks yet!</h5>
+                    <a href="{{ url_for('main.add_task') }}" class="btn btn-primary mt-2">Add Your First Task</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

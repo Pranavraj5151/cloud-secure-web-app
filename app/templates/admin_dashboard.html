@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="alert alert-danger d-flex align-items-center mb-4">
+    <span class="fs-5 me-2">👑</span>
+    <div>
+        Welcome, <strong>{{ current_user.username }}</strong>!
+        You are logged in as <span class="badge bg-danger">Admin</span>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>👑 Admin Dashboard</h3>
+    <a href="{{ url_for('main.add_task') }}" class="btn btn-primary">+ Add Task</a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card p-4 text-center border-0 bg-primary text-white">
+            <h2>{{ users|length }}</h2>
+            <p class="mb-0">Total Users</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-4 text-center border-0 bg-success text-white">
+            <h2>{{ tasks|length }}</h2>
+            <p class="mb-0">Total Tasks</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-4 text-center border-0 bg-warning text-white">
+            <h2>{{ tasks|selectattr('status', 'equalto', 'in_progress')|list|length }}</h2>
+            <p class="mb-0">In Progress</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-4 text-center border-0 bg-info text-white">
+            <h2>{{ tasks|selectattr('status', 'equalto', 'completed')|list|length }}</h2>
+            <p class="mb-0">Completed</p>
+        </div>
+    </div>
+</div>
+
+<div class="card p-4 mb-4">
+    <h4 class="mb-3">👥 All Users</h4>
+    <table class="table table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Joined</th>
+                <th>Tasks</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr class="{{ 'table-warning' if user.id == current_user.id else '' }}">
+                <td>{{ user.id }}</td>
+                <td>
+                    {{ user.username }}
+                    {% if user.id == current_user.id %}
+                        <span class="badge bg-warning text-dark ms-1">You</span>
+                    {% endif %}
+                </td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% if user.role == 'admin' %}
+                        <span class="badge bg-danger">Admin</span>
+                    {% else %}
+                        <span class="badge bg-primary">User</span>
+                    {% endif %}
+                </td>
+                <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                <td>{{ user.tasks|length }}</td>
+                <td>
+                    {% if user.id == current_user.id %}
+                        <span class="text-muted">That's you!</span>
+                    {% elif user.role == 'admin' %}
+                        <span class="text-muted">Protected</span>
+                    {% else %}
+                        <a href="{{ url_for('main.delete_user', user_id=user.id) }}"
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('Delete {{ user.username }}?')">
+                           Delete
+                        </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card p-4">
+    <h4 class="mb-3">📋 All Tasks</h4>
+    <table class="table table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Owner</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Deadline</th>
+                <th>Time Remaining</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            {% set is_overdue = task.deadline and task.deadline < now_dt and task.status != 'completed' %}
+            <tr class="{{ 'table-danger' if is_overdue else '' }}">
+                <td>{{ task.id }}</td>
+                <td>{{ task.title }}</td>
+                <td>
+                    {{ task.owner.username }}
+                    {% if task.owner.id == current_user.id %}
+                        <span class="badge bg-warning text-dark ms-1">You</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if task.priority == 'high' %}
+                        <span class="badge bg-danger">🔴 High</span>
+                    {% elif task.priority == 'medium' %}
+                        <span class="badge bg-warning">🟡 Medium</span>
+                    {% else %}
+                        <span class="badge bg-success">🟢 Low</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if task.status == 'completed' %}
+                        <span class="badge bg-success">Completed</span>
+                    {% elif task.status == 'in_progress' %}
+                        <span class="badge bg-warning">In Progress</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Pending</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if task.deadline %}
+                        {{ task.deadline.strftime('%Y-%m-%d %I:%M %p') }}
+                        {% if is_overdue %}
+                            <br><span class="badge bg-danger">⚠️ Overdue</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-muted">No deadline</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not task.deadline %}
+                        <span class="text-muted">No deadline</span>
+                    {% elif is_overdue %}
+                        <span class="badge bg-danger">Overdue</span>
+                    {% elif task.status == 'completed' %}
+                        <span class="badge bg-success">Completed</span>
+                    {% else %}
+                        {% set diff = task.deadline - now_dt %}
+                        {% set days = diff.days %}
+                        {% set hours = (diff.seconds // 3600) %}
+                        <span class="text-success fw-semibold">
+                            {% if days > 0 %}
+                                {{ days }}d {{ hours }}h
+                            {% else %}
+                                {{ hours }}h remaining
+                            {% endif %}
+                        </span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('main.edit_task', task_id=task.id) }}"
+                       class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{{ url_for('main.delete_task', task_id=task.id) }}"
+                       class="btn btn-sm btn-danger"
+                       onclick="return confirm('Delete this task?')">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
