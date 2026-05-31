@@ -38,16 +38,24 @@ jobs:
         run: |
           cd src
           docker build -t secureapp .
-          echo "Docker build successful"
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Deploy notification
-        run: |
-          echo "✅ Tests passed"
-          echo "✅ Docker build successful"
-          echo "✅ Code is ready for deployment"
-          echo "🌐 App running at http://13.234.225.107"
+      - uses: actions/checkout@v3
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            cd /home/ubuntu/cloud-secure-web-app
+            git pull origin main
+            sudo systemctl restart secureapp
+            sudo systemctl restart nginx
+            echo "Deployment successful!"
