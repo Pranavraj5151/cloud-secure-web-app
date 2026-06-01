@@ -1,9 +1,16 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db, bcrypt, limiter
 from app.models import User, Task
 from functools import wraps
+
+IST = timezone(timedelta(hours=5, minutes=30))
+
+def now_ist():
+    """Return current time in IST as a naive datetime (timezone-stripped),
+    matching how deadlines are stored from the HTML datetime-local input."""
+    return datetime.now(IST).replace(tzinfo=None)
 
 main = Blueprint('main', __name__)
 
@@ -72,7 +79,7 @@ def logout():
 @main.route('/dashboard')
 @login_required
 def dashboard():
-    now_dt = datetime.now()
+    now_dt = now_ist()
     if current_user.role == 'admin':
         tasks = Task.query.all()
         all_users = User.query.all()
@@ -93,7 +100,7 @@ def add_task():
         deadline = None
         if deadline_str:
             deadline = datetime.strptime(deadline_str, '%Y-%m-%dT%H:%M')
-            if deadline < datetime.now():
+            if deadline <= now_ist().replace(second=0, microsecond=0):
                 flash('Deadline cannot be in the past. Please choose a future date and time.', 'danger')
                 return render_template('add_task.html')
         task = Task(
@@ -125,7 +132,7 @@ def edit_task(task_id):
         deadline_str = request.form.get('deadline')
         if deadline_str:
             new_deadline = datetime.strptime(deadline_str, '%Y-%m-%dT%H:%M')
-            if new_deadline < datetime.now() and task.status != 'completed':
+            if new_deadline <= now_ist().replace(second=0, microsecond=0) and task.status != 'completed':
                 flash('Deadline cannot be in the past. Please choose a future date and time.', 'danger')
                 return render_template('edit_task.html', task=task)
             task.deadline = new_deadline
