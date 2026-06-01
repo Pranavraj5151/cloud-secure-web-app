@@ -158,14 +158,18 @@
                         <span class="badge bg-success">Completed</span>
                     {% else %}
                         {% set diff = task.deadline - now_dt %}
-                        {% set days = diff.days %}
-                        {% set hours = (diff.seconds // 3600) %}
-                        <span class="text-success fw-semibold">
+                        {% set total_seconds = (diff.days * 86400) + diff.seconds %}
+                        {% set days = total_seconds // 86400 %}
+                        {% set hours = (total_seconds % 86400) // 3600 %}
+			{% set minutes = (total_seconds % 3600) // 60 %}
+			<span class="text-success fw-semibold">
                             {% if days > 0 %}
                                 {{ days }}d {{ hours }}h
+                            {% elif hours > 0 %}
+                                {{ hours }}h {{ minutes }}m remaining
                             {% else %}
-                                {{ hours }}h remaining
-                            {% endif %}
+				{{ minutes }}m remaining
+			    {% endif %}
                         </span>
                     {% endif %}
                 </td>
