@@ -37,7 +37,8 @@ jobs:
       - name: Build Docker image
         run: |
           cd src
-          docker build -t secureapp .
+          docker build -t secureapp:latest .
+          echo "Docker build successful"
 
   deploy:
     needs: build
@@ -55,7 +56,10 @@ jobs:
           port: 22
           script: |
             cd /home/ubuntu/cloud-secure-web-app
-            git pull origin main
+            git fetch origin
+            git reset --hard origin/main
+            source src/venv/bin/activate
+            pip install -r src/requirements.txt
             sudo systemctl restart secureapp
             sudo systemctl restart nginx
             echo "Deployment successful!"
