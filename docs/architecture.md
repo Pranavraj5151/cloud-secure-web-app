@@ -74,7 +74,7 @@ Private subnet only — not publicly accessible
 
 | RDS MySQL (db.t4g.micro) | Production database |
 
-| S3 (secureapp-backups-pranav) | Database backups |
+| S3 (secureapp-backups-pranav-950639281860-ap-south-1-an) | Database backups |
 
 | CloudWatch | Monitoring and logging |
 

@@ -7,7 +7,7 @@ set -euo pipefail
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="/tmp/secureapp_backups"
 LOG_FILE="/var/log/secureapp_backup.log"
-S3_BUCKET="secureapp-backups-pranav"
+S3_BUCKET="secureapp-backups-pranav-950639281860-ap-south-1-an"
 RDS_HOST="secureapp-db.c34iggw2e8lx.ap-south-1.rds.amazonaws.com"
 RDS_USER="admin"
 RDS_PASS="SecureApp2026"
