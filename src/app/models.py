@@ -1,6 +1,11 @@
 from app import db, login_manager, bcrypt
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+IST = timezone(timedelta(hours=5, minutes=30))
+
+def now_ist():
+    return datetime.now(IST).replace(tzinfo=None)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -12,7 +17,8 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(20), default='user')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    profile_picture = db.Column(db.String(500), nullable=True)
+    created_at = db.Column(db.DateTime, default=now_ist)
     tasks = db.relationship('Task', backref='owner', lazy=True)
 
     def set_password(self, password):
@@ -28,5 +34,5 @@ class Task(db.Model):
     status = db.Column(db.String(20), default='pending')
     priority = db.Column(db.String(20), default='medium')
     deadline = db.Column(db.DateTime, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=now_ist)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
