@@ -5,12 +5,14 @@ from flask_bcrypt import Bcrypt
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_talisman import Talisman
+from flask_jwt_extended import JWTManager
 from config import Config
 
 db = SQLAlchemy()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
 limiter = Limiter(key_func=get_remote_address)
+jwt = JWTManager()
 
 def create_app():
     app = Flask(__name__)
@@ -20,6 +22,7 @@ def create_app():
     login_manager.init_app(app)
     bcrypt.init_app(app)
     limiter.init_app(app)
+    jwt.init_app(app)
 
     login_manager.login_view = 'main.login'
     login_manager.login_message_category = 'info'
