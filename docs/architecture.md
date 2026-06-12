@@ -1,168 +1,127 @@
-\# SecureApp — System Architecture
+# Architecture — SecureApp (Task Manager)
 
+**Capstone Project · IPSR Solutions Ltd Internship**
+**Student:** Pranav Raj | **Stack:** Flask · AWS · Docker · GitHub Actions
 
+---
 
-\## Architecture Overview
+## Overview
 
+SecureApp is a cloud-native task management application built using Flask (Python), deployed on AWS EC2 with a MySQL database on RDS, fronted by an Application Load Balancer, monitored via CloudWatch, backed up to S3, and delivered through an automated CI/CD pipeline using GitHub Actions.
+
+---
+
+## Live URLs
+- **ALB:** http://secureapp-alb-2065264995.ap-south-1.elb.amazonaws.com
+- **Direct:** https://13.234.225.107
+- **GitHub:** https://github.com/Pranavraj5151/cloud-secure-web-app
+
+---
+
+## Architecture Diagram
+
+![SecureApp Architecture](architecture.png)
+
+---
+
+## System Layers
+
+### 1. Internet → Application Load Balancer
+All public traffic enters through the **ALB** (`secureapp-alb`), which is Internet-facing and deployed across two availability zones (ap-south-1a and ap-south-1b). The ALB forwards HTTP:80 traffic to the target group `secureapp-tg` and performs health checks on `/health` every 30 seconds.
+
+### 2. Network Layer — AWS VPC (webadmin-vpc, 10.0.0.0/16)
+| Subnet | CIDR | AZ | Type |
+|--------|------|----|------|
+| webadmin-subnet | 10.0.1.0/24 | ap-south-1a | Public (EC2 + ALB) |
+| webadmin-subnet-1b | 10.0.2.0/24 | ap-south-1b | Public (ALB) |
+| RDS-Pvt-subnet-1 | 10.0.0.128/25 | ap-south-1a | Private (RDS) |
+| RDS-Pvt-subnet-2 | 10.0.3.0/25 | ap-south-1b | Private (RDS) |
+
+A **NAT Gateway** (`secureapp-nat`, Elastic IP: 13.126.106.215) is deployed in the public subnet to allow private subnet resources to reach the internet.
+
+### 3. EC2 Instance — Ubuntu 24.04 (t2.micro)
+The Flask application runs on EC2 behind Nginx and Gunicorn. Security is enforced at the host level via UFW firewall and fail2ban brute-force protection.
+
+### 4. Application Layer — Flask
+**Security features:**
+
+| Feature | Implementation |
+|---------|---------------|
+| Password Hashing | bcrypt |
+| JWT Authentication | Flask-JWT-Extended (/api/login, /api/me, /api/tasks) |
+| Rate Limiting | Flask-Limiter |
+| SQL Injection Prevention | SQLAlchemy ORM |
+| XSS Protection | Jinja2 auto-escaping |
+| Security Headers | Flask-Talisman + Nginx |
+| RBAC | Admin and User roles |
+| Failed Login Tracking | Python logging → CloudWatch |
+
+### 5. Database — AWS RDS MySQL 8.0
+Private subnet, not publicly accessible. Only EC2 can connect via port 3306.
+
+| Setting | Value |
+|---------|-------|
+| Endpoint | secureapp-db.c34iggw2e8lx.ap-south-1.rds.amazonaws.com |
+| Instance | db.t4g.micro |
+| Public Access | Disabled |
+
+### 6. Storage — Amazon S3
+| Purpose | Path |
+|---------|------|
+| Profile pictures | profiles/ |
+| MySQL backups | backups/ |
+
+### 7. Monitoring — CloudWatch
+
+**Log Groups:**
+- `secureapp-nginx-access`
+- `secureapp-nginx-error`
+- `secureapp-app-logs` (contains FAILED_LOGIN_ATTEMPT events)
+
+**Alarms:**
+| Alarm | Metric | Threshold |
+|-------|--------|-----------|
+| SecureApp-High-CPU | CPUUtilization | > 80% |
+| SecureApp-High-Memory | mem_used_percent | > 80% |
+| SecureApp-Health-Check | HealthyHostCount | < 1 |
+| SecureApp-Failed-Logins | FailedLoginAttempts | > 5 in 5 min |
+
+All alarms notify via SNS email topic `secureapp-alerts`.
+
+---
+
+## CI/CD Pipeline
+
+```
+Developer → git push to main
+                │
+                ├── TEST job — pip install + Bandit security scan
+                ├── BUILD job — Docker image build verification
+                └── DEPLOY job — SSH to EC2 → git pull → restart secureapp + nginx
+```
+
+---
+
+## Security Layers Summary
+
+```
 Internet
-
-│
-
-▼
-
-AWS Security Group (secureapp-sg)
-
-Ports: 22 (SSH), 80 (HTTP), 443 (HTTPS)
-
-│
-
-▼
-
-EC2 Instance — Ubuntu 24.04 (t2.micro)
-
-IP: 13.234.225.107
-
-Region: ap-south-1 (Mumbai)
-
-│
-
-├── Nginx (Port 80/443)
-
-│   ├── HTTP → HTTPS redirect
-
-│   ├── SSL/TLS termination
-
-│   ├── Security headers
-
-│   └── Reverse proxy to Gunicorn
-
-│
-
-├── Gunicorn (Unix socket)
-
-│   └── Flask Application
-
-│           ├── User authentication (bcrypt)
-
-│           ├── JWT tokens
-
-│           ├── Rate limiting
-
-│           └── SQLAlchemy ORM
-
-│
-
-└── AWS RDS MySQL (secureapp-db)
-
-Endpoint: secureapp-db.c34iggw2e8lx.ap-south-1.rds.amazonaws.com
-
-Port: 3306
-
-Private subnet only — not publicly accessible
-
-
-
-\## AWS Services Used
-
-
-
-| Service | Purpose |
-
-|---------|---------|
-
-| EC2 (t2.micro) | Web/App server |
-
-| RDS MySQL (db.t4g.micro) | Production database |
-
-| S3 (secureapp-backups-pranav-950639281860-ap-south-1-an) | Database backups |
-
-| CloudWatch | Monitoring and logging |
-
-| VPC (webadmin-vpc) | Network isolation |
-
-| Security Groups | Firewall rules |
-
-
-
-\## Network Architecture
-
-VPC: webadmin-vpc (10.0.0.0/16)
-
-│
-
-├── Public Subnet: webadmin-subnet (10.0.1.0/24) — ap-south-1a
-
-│   └── EC2 Instance (web server)
-
-│
-
-└── Private Subnets (RDS):
-
-├── webadmin-subnet (10.0.1.0/24) — ap-south-1a
-
-└── webadmin-subnet-1b (10.0.2.0/24) — ap-south-1b
-
-└── RDS MySQL (database)
-
-
-
-\## Security Layers
-
-
-
-1\. AWS Security Groups — network firewall
-
-2\. UFW — host firewall (ports 22, 80, 443)
-
-3\. fail2ban — SSH brute force protection
-
-4\. Nginx — security headers, HTTPS
-
-5\. Flask-Talisman — HTTP security headers
-
-6\. Flask-Limiter — API rate limiting
-
-7\. bcrypt — password hashing
-
-8\. SQLAlchemy ORM — SQL injection prevention
-
-9\. RDS in private subnet — database not exposed to internet
-
-
-
-\## CI/CD Pipeline
-
-Developer pushes to GitHub (main branch)
-
-│
-
-▼
-
-GitHub Actions triggered automatically
-
-│
-
-├── Job 1: TEST
-
-│   ├── Install Python dependencies
-
-│   └── Run Bandit security scan
-
-│
-
-├── Job 2: BUILD
-
-│   └── Build Docker image (verify containerization works)
-
-│
-
-└── Job 3: DEPLOY
-
-└── SSH to EC2
-
-├── git pull latest code
-
-├── pip install new dependencies
-
-└── restart Gunicorn + Nginx
-
+    │
+[ALB] ← Layer 0: Load balancer, health checks
+    │
+[AWS Security Group] ← Layer 1: Network firewall
+    │
+[UFW] ← Layer 2: Host firewall
+    │
+[Nginx + fail2ban] ← Layer 3: Reverse proxy + brute force protection
+    │
+[Gunicorn] ← WSGI server
+    │
+[Flask + Talisman + Limiter] ← Layer 4: App security
+    │
+[RDS MySQL via SQLAlchemy ORM] ← Layer 5: Private DB, parameterized queries
+```
+
+---
+
+*SecureApp — Internship Capstone · IPSR Solutions Ltd · Pranav Raj · 2026*

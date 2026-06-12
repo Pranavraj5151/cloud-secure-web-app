@@ -1,7 +1,44 @@
-venv/
-instance/
+# Python
 __pycache__/
-*.pyc
-*.db
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Environment variables - NEVER commit this
 .env
-*.pem
+*.env
+
+# Database files - do not commit SQLite
+*.db
+instance/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker
+.dockerignore
+
+# AWS
+.aws/
