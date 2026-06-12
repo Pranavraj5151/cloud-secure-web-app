@@ -224,8 +224,7 @@ def upload_profile_picture():
         s3_key = f"profiles/{filename}"
         s3 = boto3.client('s3', region_name=S3_REGION)
         s3.upload_fileobj(file, S3_BUCKET, s3_key,
-                          ExtraArgs={'ContentType': file.content_type,
-                                     'ACL': 'public-read'})
+                          ExtraArgs={'ContentType': file.content_type})
         profile_url = f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{s3_key}"
         current_user.profile_picture = profile_url
         db.session.commit()
