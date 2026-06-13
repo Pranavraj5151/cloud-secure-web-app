@@ -47,13 +47,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Deploy to EC2
+      - name: Deploy to EC2 via Bastion
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: 10.0.1.65
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
+          proxy_host: ${{ secrets.BASTION_HOST }}
+          proxy_username: ubuntu
+          proxy_key: ${{ secrets.EC2_SSH_KEY }}
+          proxy_port: 22
           script: |
             cd /home/ubuntu/cloud-secure-web-app
             git fetch origin
