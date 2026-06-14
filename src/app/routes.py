@@ -1,5 +1,6 @@
 import logging
 import boto3
+import bleach
 from datetime import datetime, timezone, timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
@@ -258,7 +259,7 @@ def delete_account():
 def add_task():
     if request.method == 'POST':
         title = request.form.get('title')
-        description = request.form.get('description')
+        description = bleach.clean(request.form.get('description', ''), strip=True)
         priority = request.form.get('priority', 'medium')
         deadline_str = request.form.get('deadline')
         deadline = None
@@ -285,7 +286,7 @@ def edit_task(task_id):
         return redirect(url_for('main.dashboard'))
     if request.method == 'POST':
         task.title = request.form.get('title')
-        task.description = request.form.get('description')
+        task.description = bleach.clean(request.form.get('description', ''), strip=True)
         task.status = request.form.get('status')
         task.priority = request.form.get('priority', 'medium')
         deadline_str = request.form.get('deadline')

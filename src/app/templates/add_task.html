@@ -5,6 +5,7 @@
         <div class="card p-4 mt-4">
             <h3 class="mb-4">➕ Add New Task</h3>
             <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="mb-3">
                     <label class="form-label">Task Title</label>
                     <input type="text" name="title" class="form-control" required>

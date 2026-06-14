@@ -40,6 +40,13 @@ built and deployed on AWS using DevSecOps best practices.
 - ✅ CloudWatch monitoring with CPU, memory, health and failed login alarms
 - ✅ Application Load Balancer (ALB)
 - ✅ NAT Gateway
+- ✅ Bastion Host for secure SSH access
+- ✅ Private subnet provisioned for application tier
+- ✅ CSRF protection on all forms
+- ✅ XSS input sanitisation with bleach
+- ✅ S3 versioning and lifecycle policy
+- ✅ Route 53 DNS hosted zone
+- ✅ 5 CloudWatch alarms (CPU, memory, disk, health, failed logins)
 
 ---
 
@@ -86,13 +93,14 @@ AWS Security Group → EC2 Ubuntu 24.04 (webadmin-subnet)
 |---------|---------------|
 | Password Hashing | bcrypt via Flask-Bcrypt |
 | JWT Authentication | Flask-JWT-Extended (/api/login, /api/me, /api/tasks) |
+| CSRF Protection | Flask-WTF CSRFProtect on all forms |
 | Rate Limiting | Flask-Limiter (10 req/min login, 5 req/min register) |
 | SQL Injection Prevention | SQLAlchemy ORM |
-| XSS Protection | Jinja2 auto-escaping |
+| XSS Protection | Jinja2 auto-escaping + bleach sanitisation |
 | Security Headers | Flask-Talisman + Nginx |
 | Brute Force Protection | fail2ban + rate limiting |
 | Firewall | UFW + AWS Security Groups |
-| SSH Hardening | Key-based auth only |
+| SSH Hardening | Key-based auth only + Bastion Host |
 | Database Security | RDS in private subnet |
 | Failed Login Tracking | CloudWatch metric filter + SNS alarm |
 | Media Storage | S3 with profile picture upload |

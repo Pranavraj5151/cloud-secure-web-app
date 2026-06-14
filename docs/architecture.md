@@ -37,7 +37,7 @@ All public traffic enters through the **ALB** (`secureapp-alb`), which is Intern
 | RDS-Pvt-subnet-1 | 10.0.0.128/25 | ap-south-1a | Private (RDS) |
 | RDS-Pvt-subnet-2 | 10.0.3.0/25 | ap-south-1b | Private (RDS) |
 
-A **NAT Gateway** (`secureapp-nat`, Elastic IP: 13.126.106.215) is deployed in the public subnet to allow private subnet resources to reach the internet.
+A **NAT Gateway** (`secureapp-nat`, Elastic IP: 13.126.106.215) is deployed in the public subnet to allow private subnet resources to reach the internet. A dedicated private application subnet (`secureapp-private`, 10.0.10.0/24) and route table (`secureapp-private-rt` → NAT Gateway) have been provisioned for private-subnet application deployments. A **bastion host** (`bastion-host`, 13.233.128.69) provides controlled SSH jump access into the private network, and is also used by the CI/CD pipeline for deployment.
 
 ### 3. EC2 Instance — Ubuntu 24.04 (t2.micro)
 The Flask application runs on EC2 behind Nginx and Gunicorn. Security is enforced at the host level via UFW firewall and fail2ban brute-force protection.
@@ -49,9 +49,10 @@ The Flask application runs on EC2 behind Nginx and Gunicorn. Security is enforce
 |---------|---------------|
 | Password Hashing | bcrypt |
 | JWT Authentication | Flask-JWT-Extended (/api/login, /api/me, /api/tasks) |
+| CSRF Protection | Flask-WTF CSRFProtect on all session-based forms |
 | Rate Limiting | Flask-Limiter |
 | SQL Injection Prevention | SQLAlchemy ORM |
-| XSS Protection | Jinja2 auto-escaping |
+| XSS Protection | Jinja2 auto-escaping + bleach input sanitisation |
 | Security Headers | Flask-Talisman + Nginx |
 | RBAC | Admin and User roles |
 | Failed Login Tracking | Python logging → CloudWatch |
@@ -83,6 +84,7 @@ Private subnet, not publicly accessible. Only EC2 can connect via port 3306.
 |-------|--------|-----------|
 | SecureApp-High-CPU | CPUUtilization | > 80% |
 | SecureApp-High-Memory | mem_used_percent | > 80% |
+| SecureApp-Disk-Space | disk_used_percent | > 85% |
 | SecureApp-Health-Check | HealthyHostCount | < 1 |
 | SecureApp-Failed-Logins | FailedLoginAttempts | > 5 in 5 min |
 
