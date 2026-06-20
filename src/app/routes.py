@@ -157,13 +157,29 @@ def logout():
 @login_required
 def dashboard():
     now_dt = now_ist()
+    sort = request.args.get('sort', 'created_desc')
+
+    def sort_tasks(task_list):
+        no_deadline = [t for t in task_list if not t.deadline]
+        with_deadline = [t for t in task_list if t.deadline]
+        if sort == 'deadline_asc':
+            with_deadline.sort(key=lambda t: t.deadline)
+            return with_deadline + no_deadline
+        elif sort == 'deadline_desc':
+            with_deadline.sort(key=lambda t: t.deadline, reverse=True)
+            return no_deadline + with_deadline
+        elif sort == 'created_asc':
+            return sorted(task_list, key=lambda t: t.created_at)
+        else:  # created_desc (default)
+            return sorted(task_list, key=lambda t: t.created_at, reverse=True)
+
     if current_user.role == 'admin':
-        tasks = Task.query.all()
+        tasks = sort_tasks(Task.query.all())
         all_users = User.query.all()
         users = sorted(all_users, key=lambda u: (u.id != current_user.id))
-        return render_template('admin_dashboard.html', tasks=tasks, users=users, now_dt=now_dt)
-    tasks = Task.query.filter_by(user_id=current_user.id).all()
-    return render_template('dashboard.html', tasks=tasks, now_dt=now_dt)
+        return render_template('admin_dashboard.html', tasks=tasks, users=users, now_dt=now_dt, sort=sort)
+    tasks = sort_tasks(Task.query.filter_by(user_id=current_user.id).all())
+    return render_template('dashboard.html', tasks=tasks, now_dt=now_dt, sort=sort)
 
 # Profile page
 @main.route('/profile')

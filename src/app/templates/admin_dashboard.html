@@ -99,13 +99,15 @@
 <div class="card p-4">
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h4 class="mb-0">📋 All Tasks</h4>
-        <select class="form-select form-select-sm" style="width:auto;"
-            onchange="window.location.href='{{ url_for('main.dashboard') }}?sort=' + this.value">
+        <form method="GET" action="" class="d-inline">
+                    <select name="sort" class="form-select form-select-sm" style="width:auto;"
+            onchange="this.form.submit()">
             <option value="created_desc" {% if sort == 'created_desc' %}selected{% endif %}>📅 Newest First</option>
             <option value="created_asc"  {% if sort == 'created_asc'  %}selected{% endif %}>📅 Oldest First</option>
             <option value="deadline_asc" {% if sort == 'deadline_asc' %}selected{% endif %}>⏰ Deadline (Soonest)</option>
             <option value="deadline_desc"{% if sort == 'deadline_desc'%}selected{% endif %}>⏰ Deadline (Latest)</option>
         </select>
+        </form>
     </div>
     <div class="table-responsive">
     <table class="table table-hover align-middle">
