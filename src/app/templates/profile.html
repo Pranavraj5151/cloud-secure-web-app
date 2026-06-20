@@ -27,7 +27,8 @@
                 </span>
             </div>
 
-            <table class="table table-bordered">
+            <div class="table-responsive">
+    <table class="table table-bordered">
                 <tr><th width="35%">Username</th><td>{{ current_user.username }}</td></tr>
                 <tr><th>Email</th><td>{{ current_user.email }}</td></tr>
                 <tr><th>Role</th><td>{{ current_user.role | capitalize }}</td></tr>
@@ -43,6 +44,7 @@
                     </td>
                 </tr>
             </table>
+</div>
         </div>
 
         <!-- Upload Profile Picture -->

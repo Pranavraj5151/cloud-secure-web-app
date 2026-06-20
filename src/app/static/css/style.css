@@ -46,3 +46,24 @@ body {
     border-radius: 10px;
     border: none;
 }
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+    .card {
+        margin-bottom: 16px;
+    }
+    .table th, .table td {
+        font-size: 13px;
+        padding: 6px 8px;
+    }
+    h2, h3 {
+        font-size: 1.3rem;
+    }
+    .btn {
+        font-size: 13px;
+        padding: 5px 10px;
+    }
+}

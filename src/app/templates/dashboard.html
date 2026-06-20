@@ -20,7 +20,8 @@
                 <a href="{{ url_for('main.add_task') }}" class="btn btn-primary">+ Add Task</a>
             </div>
             {% if tasks %}
-                <table class="table table-hover align-middle">
+                <div class="table-responsive">
+    <table class="table table-hover align-middle">
                     <thead class="table-dark">
                         <tr>
                             <th>Title</th>
@@ -100,6 +101,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
+</div>
             {% else %}
                 <div class="text-center py-5">
                     <h5 class="text-muted">No tasks yet!</h5>

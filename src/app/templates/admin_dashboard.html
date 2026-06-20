@@ -43,6 +43,7 @@
 
 <div class="card p-4 mb-4">
     <h4 class="mb-3">👥 All Users</h4>
+    <div class="table-responsive">
     <table class="table table-hover align-middle">
         <thead class="table-dark">
             <tr>
@@ -58,7 +59,7 @@
         <tbody>
             {% for user in users %}
             <tr class="{{ 'table-warning' if user.id == current_user.id else '' }}">
-                <td>{{ user.id }}</td>
+                <td>{{ loop.index }}</td>
                 <td>
                     {{ user.username }}
                     {% if user.id == current_user.id %}
@@ -93,9 +94,11 @@
         </tbody>
     </table>
 </div>
+</div>
 
 <div class="card p-4">
     <h4 class="mb-3">📋 All Tasks</h4>
+    <div class="table-responsive">
     <table class="table table-hover align-middle">
         <thead class="table-dark">
             <tr>
@@ -113,7 +116,7 @@
             {% for task in tasks %}
             {% set is_overdue = task.deadline and task.deadline < now_dt and task.status != 'completed' %}
             <tr class="{{ 'table-danger' if is_overdue else '' }}">
-                <td>{{ task.id }}</td>
+                <td>{{ loop.index }}</td>
                 <td>{{ task.title }}</td>
                 <td>
                     {{ task.owner.username }}
@@ -184,6 +187,7 @@
             {% endfor %}
         </tbody>
     </table>
+</div>
 </div>
 
 {% endblock %}
